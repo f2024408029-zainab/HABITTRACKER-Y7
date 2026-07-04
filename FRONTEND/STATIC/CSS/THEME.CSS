@@ -1,0 +1,72 @@
+/*
+Theme definitions — 5 themes*/
+
+:root,
+[data-theme="ocean"] {
+  --color-bg: #eef6fb;
+  --color-surface: #ffffff;
+  --color-primary: #1e88a8;
+  --color-primary-dark: #146279;
+  --color-accent: #52c7d9;
+  --color-text: #17323d;
+  --color-muted: #63808c;
+  --color-border: #d3e8ef;
+  --color-danger: #d9534f;
+}
+
+[data-theme="sunset"] {
+  --color-bg: #fff3ea;
+  --color-surface: #ffffff;
+  --color-primary: #e8703a;
+  --color-primary-dark: #b8511f;
+  --color-accent: #f4a259;
+  --color-text: #3a2417;
+  --color-muted: #8a6a56;
+  --color-border: #f6ddc8;
+  --color-danger: #d9534f;
+}
+
+[data-theme="forest"] {
+  --color-bg: #eef6ec;
+  --color-surface: #ffffff;
+  --color-primary: #3f8a4c;
+  --color-primary-dark: #2b6236;
+  --color-accent: #7fbf7f;
+  --color-text: #1f3320;
+  --color-muted: #63836a;
+  --color-border: #d6ebd6;
+  --color-danger: #d9534f;
+}
+
+[data-theme="midnight"] {
+  --color-bg: #14141f;
+  --color-surface: #1e1e2e;
+  --color-primary: #7c83fd;
+  --color-primary-dark: #5c63d9;
+  --color-accent: #a09bff;
+  --color-text: #eaeaf5;
+  --color-muted: #9494b0;
+  --color-border: #33334a;
+  --color-danger: #ff6b6b;
+}
+
+[data-theme="sakura"] {
+  --color-bg: #fff0f5;
+  --color-surface: #ffffff;
+  --color-primary: #d9678d;
+  --color-primary-dark: #b3436a;
+  --color-accent: #ffb6c9;
+  --color-text: #3d2028;
+  --color-muted: #8a6470;
+  --color-border: #f7d9e3;
+  --color-danger: #d9534f;
+}
+
+/* mood colors stay consistent across all themes */
+:root {
+  --mood-5: #4caf50;
+  --mood-4: #8bc34a;
+  --mood-3: #ffc107;
+  --mood-2: #ff9800;
+  --mood-1: #f44336;
+}
