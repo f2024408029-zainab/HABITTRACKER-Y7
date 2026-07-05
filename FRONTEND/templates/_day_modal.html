@@ -1,0 +1,64 @@
+<form id="dayForm" class="day-form" data-date="{{ entry_date }}">
+  <h2 class="modal-title">{{ entry_date }}</h2>
+
+  <!-- Mood  -->
+  <section class="form-section">
+    <h3>How are you feeling? <span class="required">*</span></h3>
+    <div class="mood-picker">
+      {% for value, m in moods.items() %}
+        <button type="button" class="mood-option {{ 'selected' if entry and entry.mood == value else '' }}" data-value="{{ value }}">
+          <span class="mood-emoji">{{ m.emoji }}</span>
+          <span class="mood-label">{{ m.label }}</span>
+        </button>
+      {% endfor %}
+    </div>
+    <input type="hidden" name="mood" id="moodInput" value="{{ entry.mood if entry else '' }}">
+  </section>
+
+  <!-- Emotions  -->
+  <section class="form-section">
+    <h3>What emotions are you feeling? <small>(select any)</small></h3>
+    <div class="chip-grid emotions-grid">
+      {% for emo in emotions_list %}
+        <button type="button" class="chip emotion-chip {{ 'selected' if entry and emo in entry.emotions else '' }}" data-value="{{ emo }}">{{ emo }}</button>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Hobby  -->
+  <section class="form-section">
+    <h3>Hobby today <small>(pick one)</small></h3>
+    <div class="chip-grid">
+      {% for hobby in hobby_options %}
+        <button type="button" class="chip hobby-chip {{ 'selected' if entry and entry.hobby == hobby else '' }}" data-value="{{ hobby }}">{{ hobby }}</button>
+      {% endfor %}
+    </div>
+    <input type="hidden" name="hobby" id="hobbyInput" value="{{ entry.hobby if entry else '' }}">
+  </section>
+
+  <!-- Health  -->
+  <section class="form-section">
+    <h3>Health check-in <small>(pick one)</small></h3>
+    <div class="chip-grid">
+      {% for h in health_options %}
+        <button type="button" class="chip health-chip {{ 'selected' if entry and entry.health == h else '' }}" data-value="{{ h }}">{{ h }}</button>
+      {% endfor %}
+    </div>
+    <input type="hidden" name="health" id="healthInput" value="{{ entry.health if entry else '' }}">
+  </section>
+
+  <!-- Note -->
+  <section class="form-section">
+    <h3>Write a note</h3>
+    <textarea name="note" id="noteInput" rows="3" placeholder="How was your day?">{{ entry.note if entry else '' }}</textarea>
+  </section>
+
+  <button type="submit" class="btn btn-primary btn-save">Save Entry</button>
+
+  <div id="recommendationsBox" class="recommendations-box" {% if not recommendations %}style="display:none;"{% endif %}>
+    <h3>✨ Suggested for your mood</h3>
+    <ul id="recommendationsList">
+      {% for r in recommendations %}<li>{{ r }}</li>{% endfor %}
+    </ul>
+  </div>
+</form>

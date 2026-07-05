@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% set active_page = "streaks" %}
+{% block title %}Streaks · Smart Habit Tracker{% endblock %}
+{% block content %}
+<div class="streaks-page">
+  <h1 class="page-title">Streak Analytics</h1>
+
+  <div class="streak-hero">
+    <div class="streak-flame">🔥</div>
+    <div>
+      <span class="streak-number">{{ streaks.current_streak }}</span>
+      <span class="streak-caption">day current streak</span>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-box">
+      <span class="stat-number">🏆 {{ streaks.longest_streak }}</span>
+      <span class="stat-label">Longest Streak</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-number">{{ entries|length }}</span>
+      <span class="stat-label">Days Logged</span>
+    </div>
+  </div>
+
+  <h2 class="section-heading">Recent Entries</h2>
+  <div class="entry-list">
+    {% for e in entries[-14:]|reverse %}
+      <div class="entry-row">
+        <span class="entry-date">{{ e.entry_date }}</span>
+        <span class="entry-mood">{{ moods[e.mood].emoji if e.mood and moods.get(e.mood) else '—' }}</span>
+        <span class="entry-note">{{ e.note[:60] if e.note else '' }}</span>
+      </div>
+    {% else %}
+      <p class="muted">No entries yet — start logging on the calendar!</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
