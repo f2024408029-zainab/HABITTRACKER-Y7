@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% set active_page = "mood_flow" %}
+{% block title %}Monthly Mood Flow · Smart Habit Tracker{% endblock %}
+{% block content %}
+<div class="mood-flow-page">
+  <h1 class="page-title">Monthly Mood Flow</h1>
+
+  <div class="calendar-header">
+    <a class="cal-nav" href="{{ url_for('mood_flow', year=year if month > 1 else year-1, month=month-1 if month > 1 else 12) }}">‹</a>
+    <h2>{{ month_name }} {{ year }}</h2>
+    <a class="cal-nav" href="{{ url_for('mood_flow', year=year if month < 12 else year+1, month=month+1 if month < 12 else 1) }}">›</a>
+  </div>
+
+  <div class="mood-chart-card">
+    <div class="mood-chart">
+      {% for point in flow %}
+        <div class="mood-bar-wrap" title="Day {{ point.day }}">
+          {% if point.mood %}
+            <div class="mood-bar" style="height: {{ point.mood * 16 }}px;" data-mood="{{ point.mood }}"></div>
+          {% else %}
+            <div class="mood-bar mood-bar-empty"></div>
+          {% endif %}
+          <span class="mood-bar-day">{{ point.day }}</span>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="mood-chart-legend">
+      {% for value, m in moods.items() %}
+        <span class="legend-item"><span class="legend-dot" data-mood="{{ value }}"></span>{{ m.emoji }} {{ m.label }}</span>
+      {% endfor %}
+    </div>
+  </div>
+
+  <h2 class="section-heading">Mood Breakdown (All Time)</h2>
+  <div class="mood-summary-grid">
+    {% for value, m in moods.items() %}
+      <div class="summary-box">
+        <span class="summary-emoji">{{ m.emoji }}</span>
+        <span class="summary-count">{{ summary.get(value, 0) }}</span>
+        <span class="summary-label">{{ m.label }}</span>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

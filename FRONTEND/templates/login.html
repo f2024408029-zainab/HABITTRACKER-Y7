@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Log In · Smart Habit Tracker{% endblock %}
+{% block content %}
+<div class="auth-page" data-theme="ocean">
+  <div class="auth-card">
+    <h1 class="auth-title">🌱 Welcome Back</h1>
+    <p class="auth-subtitle">Log in to keep your streak alive.</p>
+
+    <form method="POST" class="auth-form">
+      <label>Username or Email</label>
+      <input type="text" name="username" required autofocus placeholder="e.g. sara_habits">
+
+      <label>Password</label>
+      <input type="password" name="password" required placeholder="••••••••">
+
+      <button type="submit" class="btn btn-primary">Log In</button>
+    </form>
+
+    <p class="auth-switch">Don't have an account? <a href="{{ url_for('signup') }}">Sign up</a></p>
+  </div>
+</div>
+{% endblock %}
