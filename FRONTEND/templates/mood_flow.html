@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% set active_page = "mood_flow" %}
-{% block title %}Monthly Mood Flow · Smart Habit Tracker{% endblock %}
+{% block title %}Mood Flow · My Life Journal{% endblock %}
 {% block content %}
 <div class="mood-flow-page">
-  <h1 class="page-title">Monthly Mood Flow</h1>
+  <h1 class="page-title">Mood & Focus Analytics</h1>
 
   <div class="calendar-header">
     <a class="cal-nav" href="{{ url_for('mood_flow', year=year if month > 1 else year-1, month=month-1 if month > 1 else 12) }}">‹</a>
@@ -11,6 +11,7 @@
     <a class="cal-nav" href="{{ url_for('mood_flow', year=year if month < 12 else year+1, month=month+1 if month < 12 else 1) }}">›</a>
   </div>
 
+  <h2 class="section-heading">Mood Chart</h2>
   <div class="mood-chart-card">
     <div class="mood-chart">
       {% for point in flow %}
@@ -26,17 +27,34 @@
     </div>
     <div class="mood-chart-legend">
       {% for value, m in moods.items() %}
-        <span class="legend-item"><span class="legend-dot" data-mood="{{ value }}"></span>{{ m.emoji }} {{ m.label }}</span>
+        <span class="legend-item"><span class="legend-dot" data-mood="{{ value }}"></span>{{ value }} — {{ m.label }}</span>
       {% endfor %}
     </div>
+  </div>
+
+  <h2 class="section-heading">Focus Time Chart</h2>
+  <div class="mood-chart-card">
+    <div class="mood-chart">
+      {% for point in flow %}
+        {% set secs = focus_by_day.get(point.day, 0) %}
+        <div class="mood-bar-wrap" title="Day {{ point.day }}: {{ (secs // 60) }} min">
+          {% if secs %}
+            <div class="focus-bar" style="height: {{ [secs // 60, 100] | min }}px;"></div>
+          {% else %}
+            <div class="mood-bar mood-bar-empty"></div>
+          {% endif %}
+          <span class="mood-bar-day">{{ point.day }}</span>
+        </div>
+      {% endfor %}
+    </div>
+    <p class="muted">Total focus time logged (all time): <strong>{{ total_focus }}</strong></p>
   </div>
 
   <h2 class="section-heading">Mood Breakdown (All Time)</h2>
   <div class="mood-summary-grid">
     {% for value, m in moods.items() %}
       <div class="summary-box">
-        <span class="summary-emoji">{{ m.emoji }}</span>
-        <span class="summary-count">{{ summary.get(value, 0) }}</span>
+        <span class="summary-count" data-mood="{{ value }}">{{ summary.get(value, 0) }}</span>
         <span class="summary-label">{{ m.label }}</span>
       </div>
     {% endfor %}

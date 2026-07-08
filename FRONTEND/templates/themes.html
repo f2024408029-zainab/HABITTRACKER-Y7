@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% set active_page = "themes" %}
+{% block title %}Themes · My Life Journal{% endblock %}
+{% block content %}
+<div class="settings-page">
+  <h1 class="page-title">Themes</h1>
+  <p class="page-subtitle">Pick a look that fits your mood.</p>
+
+  <form method="POST" class="theme-form">
+    <div class="theme-grid">
+      {% for theme in themes %}
+        <label class="theme-swatch-label">
+          <input type="radio" name="theme" value="{{ theme }}" {{ 'checked' if user.theme == theme else '' }} onchange="this.form.submit()">
+          <span class="theme-swatch" data-theme-preview="{{ theme }}">
+            <span class="swatch-dot swatch-1"></span>
+            <span class="swatch-dot swatch-2"></span>
+            <span class="swatch-dot swatch-3"></span>
+          </span>
+          <span class="theme-name">{{ theme|capitalize }}</span>
+        </label>
+      {% endfor %}
+    </div>
+  </form>
+</div>
+{% endblock %}
