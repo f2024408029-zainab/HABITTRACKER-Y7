@@ -1,6 +1,7 @@
 -- ============================================================
--- Smart Habit Tracker with Streak Analytics
+-- daily journal with Streak Analytics
 -- Database Schema (SQLite)
+-- ============================================================
 
 PRAGMA foreign_keys = ON;
 
@@ -14,7 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
     created_at    TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
--- One entry per user per calendar day. mood is 1-5 1 would be lowet and 5 high
+-- One entry per user per calendar day. mood is 1-5 (1 = Awful ... 5 = Great)
 CREATE TABLE IF NOT EXISTS entries (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -34,6 +35,17 @@ CREATE TABLE IF NOT EXISTS entry_emotions (
     entry_id  INTEGER NOT NULL REFERENCES entries(id) ON DELETE CASCADE,
     emotion   TEXT NOT NULL
 );
+
+-- Focus Mode sessions: user selects HH:MM:SS, session length is logged per day
+CREATE TABLE IF NOT EXISTS focus_sessions (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    session_date    TEXT NOT NULL,               -- format YYYY-MM-DD
+    duration_seconds INTEGER NOT NULL,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_focus_user_date ON focus_sessions(user_id, session_date);
 
 CREATE INDEX IF NOT EXISTS idx_entries_user_date ON entries(user_id, entry_date);
 CREATE INDEX IF NOT EXISTS idx_entry_emotions_entry ON entry_emotions(entry_id);
