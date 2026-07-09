@@ -1,11 +1,10 @@
 """
 analytics.py
 ------------
-It is a Python helper functions for:
-  1. Streak calculation 
+Python helper functions for:
+  1. Streak calculation (current streak + longest streak of logged days)
   2. Monthly mood-flow data (for the chart on the dashboard)
   3. Mood -> hobby recommendation engine
-  so, this will create analytics board...
 """
 
 from datetime import date, datetime, timedelta
@@ -42,6 +41,29 @@ HOBBY_OPTIONS = [
     "Reading", "Gaming", "Painting/Drawing", "Music", "Cooking/Baking",
     "Sports", "Gardening", "Photography", "Writing", "Gym/Workout",
 ]
+
+# ---------------------------------------------------------------
+# Daily motivation notes — a short rotating list. A new one is
+# shown each calendar day, deterministically based on day-of-year,
+# so it's the same note all day but changes tomorrow.
+# ---------------------------------------------------------------
+DAILY_MOTIVATION_NOTES = [
+    "Small steps every day add up to big change.",
+    "You don't have to be perfect, you just have to show up.",
+    "Progress, not perfection.",
+    "Be proud of how far you've come.",
+    "One honest entry today is better than a perfect one you never write.",
+    "Rest is productive too.",
+    "Your feelings are valid, whatever they are today.",
+    "Consistency beats intensity.",
+]
+
+
+def get_daily_motivation(for_date=None):
+    """Deterministically rotate through the notes list, one per calendar day."""
+    d = for_date or date.today()
+    index = d.timetuple().tm_yday % len(DAILY_MOTIVATION_NOTES)
+    return DAILY_MOTIVATION_NOTES[index]
 
 
 def recommend_hobbies(mood):
@@ -110,3 +132,54 @@ def mood_summary(entries):
         if e.get("mood"):
             counts[int(e["mood"])] = counts.get(int(e["mood"]), 0) + 1
     return counts
+
+
+def build_month_summary(entries, year, month):
+    """
+    Build the data needed for the 'Summary' view: a plain-text digest of
+    the month's notes, a count of hobbies logged, and a de-duplicated list
+    of hobby suggestions that were relevant that month (based on moods logged).
+    """
+    month_entries = [
+        e for e in entries
+        if e["entry_date"].startswith(f"{year:04d}-{month:02d}-")
+    ]
+    month_entries.sort(key=lambda e: e["entry_date"])
+
+    # Text digest: one line per day that has a note
+    lines = []
+    for e in month_entries:
+        if e.get("note"):
+            mood_label = MOODS[int(e["mood"])]["label"] if e.get("mood") else "No mood logged"
+            lines.append(f"{e['entry_date']} ({mood_label}): {e['note']}")
+    digest_text = "\n".join(lines) if lines else "No journal notes recorded for this month yet."
+
+    # Hobby counts
+    hobby_counts = {}
+    for e in month_entries:
+        if e.get("hobby"):
+            hobby_counts[e["hobby"]] = hobby_counts.get(e["hobby"], 0) + 1
+
+    # Suggestions: union of recommendations for every distinct mood logged this month
+    moods_logged = {int(e["mood"]) for e in month_entries if e.get("mood")}
+    suggestions = []
+    for m in sorted(moods_logged, reverse=True):
+        for s in recommend_hobbies(m):
+            if s not in suggestions:
+                suggestions.append(s)
+
+    return {
+        "digest_text": digest_text,
+        "hobby_counts": hobby_counts,
+        "suggestions": suggestions,
+        "entry_count": len(month_entries),
+    }
+
+
+def format_duration(total_seconds):
+    """Format a number of seconds as H:MM:SS for display."""
+    total_seconds = int(total_seconds or 0)
+    h = total_seconds // 3600
+    m = (total_seconds % 3600) // 60
+    s = total_seconds % 60
+    return f"{h}:{m:02d}:{s:02d}"
