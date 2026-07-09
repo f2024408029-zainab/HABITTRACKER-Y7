@@ -1,5 +1,6 @@
-/*
-Theme definitions — 5 themes*/
+/* 
+Theme definitions — 5 themes, switched via [data-theme] on <html>
+ */
 
 :root,
 [data-theme="ocean"] {

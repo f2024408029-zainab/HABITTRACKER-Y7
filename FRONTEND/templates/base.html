@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{% block title %}Smart Habit Tracker{% endblock %}</title>
+<title>{% block title %}My Life Journal{% endblock %}</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/themes.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
@@ -21,33 +21,34 @@
 
   {% if user %}
   <header class="top-bar">
-    <a href="{{ url_for('dashboard') }}" class="brand">🌱 Habit Tracker</a>
-    <a href="{{ url_for('logout') }}" class="logout-link">Log out</a>
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+    <a href="{{ url_for('view') }}" class="brand">My Life Journal</a>
+    <span class="top-bar-spacer"></span>
   </header>
-  {% endif %}
 
-  <main class="app-shell">
-    {% block content %}{% endblock %}
-  </main>
-
-  {% if user %}
-  <nav class="bottom-nav">
-    <a href="{{ url_for('profile') }}" class="nav-item {{ 'active' if active_page == 'profile' else '' }}">
-      <span class="nav-icon">👤</span><span>Profile</span>
-    </a>
-    <a href="{{ url_for('mood_flow') }}" class="nav-item {{ 'active' if active_page == 'mood_flow' else '' }}">
-      <span class="nav-icon">📈</span><span>Mood Flow</span>
-    </a>
-    <a href="{{ url_for('streaks') }}" class="nav-item {{ 'active' if active_page == 'streaks' else '' }}">
-      <span class="nav-icon">🔥</span><span>Streaks</span>
-    </a>
-    <a href="{{ url_for('settings') }}" class="nav-item {{ 'active' if active_page == 'settings' else '' }}">
-      <span class="nav-icon">⚙️</span><span>Settings</span>
-    </a>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-title">Menu</span>
+      <button class="sidebar-close" id="sidebarCloseBtn" aria-label="Close menu">&times;</button>
+    </div>
+    <a href="{{ url_for('view', tab='calendar') }}" class="sidebar-link {{ 'active' if active_page == 'view' else '' }}">View</a>
+    <a href="{{ url_for('mood_flow') }}" class="sidebar-link {{ 'active' if active_page == 'mood_flow' else '' }}">Mood Flow</a>
+    <a href="{{ url_for('streaks') }}" class="sidebar-link {{ 'active' if active_page == 'streaks' else '' }}">Streaks</a>
+    <a href="{{ url_for('themes') }}" class="sidebar-link {{ 'active' if active_page == 'themes' else '' }}">Themes</a>
+    <a href="{{ url_for('settings') }}" class="sidebar-link {{ 'active' if active_page == 'settings' else '' }}">Settings</a>
+    <a href="{{ url_for('logout') }}" class="sidebar-link sidebar-logout">Log Out</a>
   </nav>
   {% endif %}
 
+  <main class="app-shell {{ 'app-shell-guest' if not user else '' }}">
+    {% block content %}{% endblock %}
+  </main>
+
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>
