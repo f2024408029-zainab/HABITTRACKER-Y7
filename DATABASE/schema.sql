@@ -1,4 +1,5 @@
 -- ============================================================
+-- Version: 2.0 (My Life Journal — adds focus_sessions table for Focus Mode)
 -- daily journal with Streak Analytics
 -- Database Schema (SQLite)
 -- ============================================================
