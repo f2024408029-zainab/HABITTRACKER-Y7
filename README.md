@@ -1,4 +1,4 @@
-# 📔 My Life Journal
+# My Life Journal
 
 A web-based personal journal, mood tracker, and focus companion built with
 **Python (Flask)** and **SQLite**. Users sign up, log in, and land on a
@@ -15,7 +15,7 @@ whose sessions feed into the analytics.
 **Signup / Login** — password-hashed auth using Flask sessions
 **Slide-out side menu** — View, Mood Flow, Streaks, Themes, Settings, Log Out
 **Interactive monthly calendar** — click any day to log an entry
-**5 mood options**, 🧠 **20 emotions**, 🎨 **hobby chips**, ❤️ **health chips**,
+**5 mood options**, **20 emotions**, **hobby chips**, **health chips**,
 **free-text note** — everything is click-to-select except the note
 **Smart recommendations** — suggested activities based on your logged mood
 **Monthly Summary view** — pick a year/month to see a journal digest, hobby counts, and a suggestions summary for that period
