@@ -261,7 +261,9 @@ def settings():
     user = current_user()
     return render_template("settings.html", user=user)
 
-
+@app.route("/health")
+def health_check():
+    return jsonify({"status": "ok", "app": "My Life Journal"})
 # ---------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------
