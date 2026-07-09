@@ -27,6 +27,7 @@ THEMES = ["ocean", "sunset", "forest", "midnight", "sakura"]
 
 # ---------------------------------------------------------------
 # Helpers
+# ---------------------------------------------------------------
 
 def login_required(view):
     @wraps(view)
@@ -45,11 +46,12 @@ def current_user():
 
 # ---------------------------------------------------------------
 # Auth routes
+# ---------------------------------------------------------------
 
 @app.route("/")
 def home():
     if "user_id" in session:
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("view"))
     return redirect(url_for("login"))
 
 
@@ -76,7 +78,7 @@ def signup():
         user_id = db.create_user(username, email, password_hash)
         session["user_id"] = user_id
         flash("Account created! Welcome aboard.", "success")
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("view"))
 
     return render_template("signup.html")
 
@@ -96,7 +98,7 @@ def login():
             return render_template("login.html")
 
         session["user_id"] = user["id"]
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("view"))
 
     return render_template("login.html")
 
@@ -108,39 +110,69 @@ def logout():
 
 
 # ---------------------------------------------------------------
-# Dashboard / calendar
+# Home / View (Calendar tab + Summary tab)
+# ---------------------------------------------------------------
 
-@app.route("/dashboard")
+@app.route("/view")
 @login_required
-def dashboard():
+def view():
     user = current_user()
-
+    tab = request.args.get("tab", "calendar")
     year = request.args.get("year", type=int) or date.today().year
     month = request.args.get("month", type=int) or date.today().month
 
-    cal = pycalendar.Calendar(firstweekday=6)  # Sunday-first calendar
-    month_days = cal.monthdayscalendar(year, month)  # weeks of [0 padded days]
-    entries_by_day = db.get_entries_for_month(user["id"], year, month)
+    entries = db.get_all_entries(user["id"])
+    available_years = sorted({int(e["entry_date"][:4]) for e in entries}) or [date.today().year]
+    if date.today().year not in available_years:
+        available_years.append(date.today().year)
+        available_years.sort()
 
-    prev_month = month - 1 or 12
-    prev_year = year - 1 if month == 1 else year
-    next_month = month % 12 + 1
-    next_year = year + 1 if month == 12 else year
-
-    return render_template(
-        "dashboard.html",
+    context = dict(
         user=user,
-        month_days=month_days,
-        entries_by_day=entries_by_day,
+        tab=tab,
         year=year,
         month=month,
         month_name=pycalendar.month_name[month],
-        prev_month=prev_month, prev_year=prev_year,
-        next_month=next_month, next_year=next_year,
-        today=date.today().isoformat(),
-        moods=analytics.MOODS,
-        themes=THEMES,
+        month_names=list(pycalendar.month_name),
+        available_years=available_years,
+        motivation_note=analytics.get_daily_motivation(),
+        total_focus=analytics.format_duration(db.get_total_focus_seconds(user["id"])),
     )
+
+    if tab == "summary":
+        summary = analytics.build_month_summary(entries, year, month)
+        context.update(summary=summary)
+    else:
+        cal = pycalendar.Calendar(firstweekday=6)  # Sunday-first calendar
+        month_days = cal.monthdayscalendar(year, month)
+        entries_by_day = db.get_entries_for_month(user["id"], year, month)
+
+        prev_month = month - 1 or 12
+        prev_year = year - 1 if month == 1 else year
+        next_month = month % 12 + 1
+        next_year = year + 1 if month == 12 else year
+
+        context.update(
+            month_days=month_days,
+            entries_by_day=entries_by_day,
+            prev_month=prev_month, prev_year=prev_year,
+            next_month=next_month, next_year=next_year,
+            today=date.today().isoformat(),
+            moods=analytics.MOODS,
+        )
+
+    return render_template("view.html", **context)
+
+
+@app.route("/focus", methods=["POST"])
+@login_required
+def log_focus():
+    user = current_user()
+    duration_seconds = request.form.get("duration_seconds", type=int) or 0
+    session_date = request.form.get("session_date") or date.today().isoformat()
+    if duration_seconds > 0:
+        db.add_focus_session(user["id"], session_date, duration_seconds)
+    return jsonify({"status": "ok", "total_focus": analytics.format_duration(db.get_total_focus_seconds(user["id"]))})
 
 
 @app.route("/day/<entry_date>")
@@ -178,16 +210,8 @@ def save_day(entry_date):
 
 
 # ---------------------------------------------------------------
-# Bottom pages: profile, mood flow, streaks, and setting he 4 options
-
-@app.route("/profile")
-@login_required
-def profile():
-    user = current_user()
-    entries = db.get_all_entries(user["id"])
-    streaks = analytics.calculate_streaks(entries)
-    return render_template("profile.html", user=user, streaks=streaks, total_entries=len(entries))
-
+# Sidebar pages: mood flow, streaks, themes, settings
+# ---------------------------------------------------------------
 
 @app.route("/mood-flow")
 @login_required
@@ -198,9 +222,12 @@ def mood_flow():
     entries = db.get_all_entries(user["id"])
     flow = analytics.monthly_mood_flow(entries, year, month)
     summary = analytics.mood_summary(entries)
+    focus_by_day = db.get_focus_sessions_for_month(user["id"], year, month)
+    total_focus = analytics.format_duration(db.get_total_focus_seconds(user["id"]))
     return render_template(
         "mood_flow.html", user=user, flow=flow, year=year, month=month,
         month_name=pycalendar.month_name[month], moods=analytics.MOODS, summary=summary,
+        focus_by_day=focus_by_day, total_focus=total_focus,
     )
 
 
@@ -215,21 +242,29 @@ def streaks():
     )
 
 
-@app.route("/settings", methods=["GET", "POST"])
+@app.route("/themes", methods=["GET", "POST"])
 @login_required
-def settings():
+def themes():
     user = current_user()
     if request.method == "POST":
         theme = request.form.get("theme")
         if theme in THEMES:
             db.update_user_theme(user["id"], theme)
             flash("Theme updated!", "success")
-        return redirect(url_for("settings"))
-    return render_template("settings.html", user=user, themes=THEMES)
+        return redirect(url_for("themes"))
+    return render_template("themes.html", user=user, themes=THEMES)
+
+
+@app.route("/settings")
+@login_required
+def settings():
+    user = current_user()
+    return render_template("settings.html", user=user)
 
 
 # ---------------------------------------------------------------
 # Entry point
+# ---------------------------------------------------------------
 
 if __name__ == "__main__":
     db.init_db()

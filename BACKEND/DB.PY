@@ -1,15 +1,14 @@
 """
 db.py
------
-Database will be saved here.
-Uses plain sqlite3
 """
+
 import sqlite3
 import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_PATH = os.path.join(BASE_DIR, "database", "habit_tracker.db")
 SCHEMA_PATH = os.path.join(BASE_DIR, "database", "schema.sql")
+
 
 def get_connection():
     """Return a new sqlite3 connection with foreign keys enabled and
@@ -18,6 +17,7 @@ def get_connection():
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
+
 
 def init_db():
     """Create the database file + tables if they don't already exist."""
@@ -31,6 +31,7 @@ def init_db():
 
 # ---------------------------------------------------------------
 # User helpers
+# ---------------------------------------------------------------
 
 def create_user(username, email, password_hash):
     conn = get_connection()
@@ -43,6 +44,7 @@ def create_user(username, email, password_hash):
     conn.close()
     return user_id
 
+
 def get_user_by_username(username):
     conn = get_connection()
     row = conn.execute(
@@ -51,17 +53,20 @@ def get_user_by_username(username):
     conn.close()
     return row
 
+
 def get_user_by_email(email):
     conn = get_connection()
     row = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
     conn.close()
     return row
 
+
 def get_user_by_id(user_id):
     conn = get_connection()
     row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
     conn.close()
     return row
+
 
 def update_user_theme(user_id, theme):
     conn = get_connection()
@@ -72,6 +77,7 @@ def update_user_theme(user_id, theme):
 
 # ---------------------------------------------------------------
 # Entry helpers
+# ---------------------------------------------------------------
 
 def get_entry(user_id, entry_date):
     conn = get_connection()
@@ -94,6 +100,7 @@ def get_entry(user_id, entry_date):
     data["emotions"] = emotions
     return data
 
+
 def get_entries_for_month(user_id, year, month):
     """Return a dict keyed by day-number (int) -> entry dict, for a given month."""
     prefix = f"{year:04d}-{month:02d}-"
@@ -109,6 +116,7 @@ def get_entries_for_month(user_id, year, month):
     conn.close()
     return result
 
+
 def get_all_entries(user_id):
     conn = get_connection()
     rows = conn.execute(
@@ -117,6 +125,7 @@ def get_all_entries(user_id):
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
+
 
 def upsert_entry(user_id, entry_date, mood, hobby, health, note, emotions):
     conn = get_connection()
@@ -151,3 +160,46 @@ def upsert_entry(user_id, entry_date, mood, hobby, health, note, emotions):
     conn.commit()
     conn.close()
     return entry_id
+
+
+# ---------------------------------------------------------------
+# Focus Mode helpers
+# ---------------------------------------------------------------
+
+def add_focus_session(user_id, session_date, duration_seconds):
+    conn = get_connection()
+    conn.execute(
+        "INSERT INTO focus_sessions (user_id, session_date, duration_seconds) VALUES (?, ?, ?)",
+        (user_id, session_date, duration_seconds),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_focus_sessions_for_month(user_id, year, month):
+    """Return dict day-number -> total focus seconds logged that day."""
+    prefix = f"{year:04d}-{month:02d}-"
+    conn = get_connection()
+    rows = conn.execute(
+        """SELECT session_date, SUM(duration_seconds) as total
+           FROM focus_sessions
+           WHERE user_id = ? AND session_date LIKE ?
+           GROUP BY session_date""",
+        (user_id, prefix + "%"),
+    ).fetchall()
+    conn.close()
+    result = {}
+    for r in rows:
+        day = int(r["session_date"].split("-")[2])
+        result[day] = r["total"]
+    return result
+
+
+def get_total_focus_seconds(user_id):
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT SUM(duration_seconds) as total FROM focus_sessions WHERE user_id = ?",
+        (user_id,),
+    ).fetchone()
+    conn.close()
+    return row["total"] or 0
